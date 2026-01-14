@@ -1,4 +1,4 @@
-# 💌 Wedding Guest Manager Pro (축의금 정산 매니저)
+# 💌 Wedding Guest Manager (축의금 정산 매니저)
 
 친누나의 결혼식 축의대를 맡게 되면서 효율적으로 정산을 하기 위해 개발한 축의금 정산 프로그램입니다.
 
@@ -53,33 +53,35 @@ Wedding-Gift-Manager/
 ├── about_dialog.py      # 프로그램 정보 및 크레딧
 ├── icon.ico             # 애플리케이션 아이콘
 └── guest_data.json      # (자동생성) 하객 데이터 저장소
+```
 
+## 🚀 How to Run
+### 1. 개발 환경에서 실행
 
-🚀 How to Run
-1. 개발 환경에서 실행
-Bash
-
+```Bash
 # 필수 라이브러리 설치
 pip install customtkinter pandas openpyxl
 
+
 # 실행
 python main.py
+```
 
-2. 실행 파일(EXE) 빌드 방법
-Bash
-
+### 2. 실행 파일(EXE) 빌드 방법
+```Bash
 pip install pyinstaller
 
 # 빌드 명령어 (아이콘 포함, 콘솔 미노출)
 pyinstaller --noconsole --onefile --collect-all customtkinter --icon="icon.ico" --name "축의금매니저" main.py
-
-⚠️ Privacy Note
-
+```
+## ⚠️ Privacy Note
+```
 guest_data.json 파일에는 실제 하객들의 개인정보와 축의금 내역이 포함되므로, 절대 GitHub 저장소에 업로드하지 마십시오. (이미 .gitignore 처리가 되어 있습니다.)
-👨‍💻 Developer
+```
+## 👨‍💻 Developer
 
 Seyoung Backend Developer Aspiring to build robust and scalable systems.
 
-    GitHub: github.com/your-id
+[GitHub: github.com/syann97](https://github.com/syann97)
 
 © 2026 Seyoung. All Rights Reserved.
