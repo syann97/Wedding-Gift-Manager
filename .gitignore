@@ -1,0 +1,29 @@
+# --- 1. 파이썬 필수 제외 파일 ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- 2. 가상환경 및 IDE 설정 파일 ---
+.idea/
+.vscode/
+env/
+venv/
+.env
+
+# --- 3. 빌드 관련 파일 (PyInstaller) ---
+build/
+dist/
+*.spec
+
+# --- 4. 데이터 및 설정 파일 ---
+guest_data.json
+
+# 엑셀 파일 (테스트로 만든 파일들)
+*.xlsx
+
+# 5. 설정 파일
+config.json
+
+# --- 6. 운영체제 관련 잡동사니 ---
+.DS_Store
+Thumbs.db

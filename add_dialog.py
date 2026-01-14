@@ -3,94 +3,84 @@ from tkinter import messagebox
 
 
 class AddGuestDialog(ctk.CTkToplevel):
-    def __init__(self, parent, initial_data=None):
+    def __init__(self, parent, data_manager, initial_data=None):
         super().__init__(parent)
 
-        # 1. 수정 모드인지 확인
+        self.db = data_manager
+        self.config = self.db.load_config()
+
         self.is_edit_mode = initial_data is not None
         self.initial_data = initial_data
 
-        # 2. 타이틀 설정
         title_text = "하객 정보 수정" if self.is_edit_mode else "새 하객 등록"
         self.title(title_text)
 
         self.geometry("520x680")
         self.resizable(False, False)
-
-        # 모달 설정 (부모 창 제어 잠금)
         self.transient(parent)
         self.grab_set()
         self.focus_force()
 
-        # 결과 데이터 저장 변수
         self.guest_data = None
 
-        # 폰트 설정
         self.font_header = ("Malgun Gothic", 16, "bold")
         self.font_label = ("Malgun Gothic", 13)
         self.font_input = ("Malgun Gothic", 13)
 
-        # UI 그리기
         self._init_ui()
 
-        # ★ 수정 모드일 경우 기존 데이터 채워 넣기
         if self.is_edit_mode:
             self._populate_data()
-            # 저장 버튼을 파란색 '수정 완료' 버튼으로 변경
             self.btn_save.configure(text="수정 완료", fg_color="#1E88E5", hover_color="#1976D2")
 
         self._center_window(parent)
 
     def _init_ui(self):
-        # 전체 컨테이너
         main_frame = ctk.CTkFrame(self, fg_color="transparent")
         main_frame.pack(fill="both", expand=True, padx=25, pady=25)
 
-        # --- [섹션 1] 인적 사항 ---
+        # [섹션 1] 인적 사항
         info_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         info_frame.pack(fill="x", pady=(0, 20))
 
         ctk.CTkLabel(info_frame, text="👤 인적 사항", font=self.font_header).pack(anchor="w", padx=20, pady=(20, 15))
 
-        # [Row 1] 이름 & 소속
         row1 = ctk.CTkFrame(info_frame, fg_color="transparent")
         row1.pack(fill="x", padx=20, pady=(0, 15))
 
-        # 이름
         ctk.CTkLabel(row1, text="이름 *", font=self.font_label).pack(side="left", padx=(0, 10))
         self.entry_name = ctk.CTkEntry(row1, width=130, font=self.font_input, placeholder_text="예: 홍길동")
         self.entry_name.pack(side="left")
 
-        # 소속
         ctk.CTkLabel(row1, text="소속", font=self.font_label).pack(side="left", padx=(20, 10))
         self.entry_affil = ctk.CTkEntry(row1, width=150, font=self.font_input, placeholder_text="예: 삼성전자")
         self.entry_affil.pack(side="left", fill="x", expand=True)
 
-        # [Row 2] 구분 & 관계
         row2 = ctk.CTkFrame(info_frame, fg_color="transparent")
         row2.pack(fill="x", padx=20, pady=(0, 20))
 
-        # 구분 (신랑/신부)
         ctk.CTkLabel(row2, text="구분", font=self.font_label).pack(side="left", padx=(0, 10))
-        self.seg_side = ctk.CTkSegmentedButton(row2, values=["신랑", "신부"], width=130, font=("Malgun Gothic", 12, "bold"))
-        self.seg_side.set("신랑")
-        self.seg_side.pack(side="left")
 
-        # 관계
+        sides = self.config.get("sides", ["신랑", "신부"])
+        self.combo_side = ctk.CTkComboBox(row2, values=sides, width=130, font=self.font_input)
+        self.combo_side.set(sides[0] if sides else "신랑")
+        self.combo_side.pack(side="left")
+
+
         ctk.CTkLabel(row2, text="관계", font=self.font_label).pack(side="left", padx=(20, 10))
-        self.combo_rel = ctk.CTkComboBox(row2, values=["친구", "친척", "직장", "가족", "지인", "기타"],
-                                         width=120, font=self.font_input)
-        self.combo_rel.set("친구")
+
+        relations = self.config.get("relations", ["친구", "친척"])
+        self.combo_rel = ctk.CTkComboBox(row2, values=relations, width=120, font=self.font_input)
+        self.combo_rel.set(relations[0] if relations else "친구")
         self.combo_rel.pack(side="left", fill="x", expand=True)
 
-        # --- [섹션 2] 축의금 및 식권 ---
+        # [섹션 2] 축의금 및 식권
         money_frame = ctk.CTkFrame(main_frame, corner_radius=10, fg_color=("#E3F2FD", "#1e2a36"))
         money_frame.pack(fill="x", pady=(0, 20))
 
         ctk.CTkLabel(money_frame, text="💰 축의금 및 식권", font=self.font_header, text_color=("#1565C0", "#64B5F6")).pack(
             anchor="w", padx=20, pady=(20, 10))
 
-        # 금액 입력 Row
         money_row = ctk.CTkFrame(money_frame, fg_color="transparent")
         money_row.pack(fill="x", padx=20, pady=(0, 10))
 
@@ -100,7 +90,6 @@ class AddGuestDialog(ctk.CTkToplevel):
         self.entry_amount.pack(side="left")
         ctk.CTkLabel(money_row, text="원", font=self.font_label).pack(side="left", padx=(10, 0))
 
-        # 간편 버튼 Row
         btn_row = ctk.CTkFrame(money_frame, fg_color="transparent")
         btn_row.pack(fill="x", padx=20, pady=(5, 15))
 
@@ -116,7 +105,6 @@ class AddGuestDialog(ctk.CTkToplevel):
         ctk.CTkButton(btn_row, text="C", width=40, height=30, fg_color="#EF5350", hover_color="#C62828",
                       command=lambda: self._set_money(0)).pack(side="right")
 
-        # 식권 Row
         meal_row = ctk.CTkFrame(money_frame, fg_color="transparent")
         meal_row.pack(fill="x", padx=20, pady=(5, 20))
 
@@ -134,7 +122,7 @@ class AddGuestDialog(ctk.CTkToplevel):
         ctk.CTkButton(counter_box, text="+", width=35, height=35, fg_color="#B0BEC5", text_color="black",
                       command=lambda: self._change_ticket(1)).pack(side="left")
 
-        # --- [섹션 3] 비고 및 버튼 ---
+        # [섹션 3] 비고
         note_frame = ctk.CTkFrame(main_frame, corner_radius=10)
         note_frame.pack(fill="both", expand=True)
 
@@ -142,7 +130,7 @@ class AddGuestDialog(ctk.CTkToplevel):
         self.entry_note = ctk.CTkTextbox(note_frame, height=70, font=self.font_input)
         self.entry_note.pack(fill="x", padx=20, pady=(0, 20))
 
-        # 하단 액션 버튼
+        # 버튼
         action_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         action_frame.pack(fill="x", pady=(10, 0))
 
@@ -159,37 +147,29 @@ class AddGuestDialog(ctk.CTkToplevel):
 
         self.bind('<Return>', lambda e: self.save_guest())
 
-    # --- 데이터 로드 (수정 모드용) ---
     def _populate_data(self):
-        """기존 데이터를 입력창에 채워넣기"""
         data = self.initial_data
 
-        # 이름
         self.entry_name.delete(0, "end")
         self.entry_name.insert(0, data.get('name', ''))
 
-        # 소속
         self.entry_affil.delete(0, "end")
         self.entry_affil.insert(0, data.get('affiliation', ''))
 
-        # 구분 (신랑/신부)
-        self.seg_side.set(data.get('side', '신랑'))
+        side = data.get('side', '신랑')
+        self.combo_side.set(side)
 
-        # 관계
-        self.combo_rel.set(data.get('relation', '친구'))
+        rel = data.get('relation', '친구')
+        self.combo_rel.set(rel)
 
-        # 금액 (콤마 포맷팅 포함)
         amount = data.get('amount', 0)
         self._set_money(amount)
 
-        # 식권
         self.lbl_ticket.configure(text=str(data.get('meal', 1)))
 
-        # 비고 (Textbox는 인덱스가 "1.0"부터 시작)
         self.entry_note.delete("1.0", "end")
         self.entry_note.insert("1.0", data.get('note', ''))
 
-    # --- 내부 로직 ---
     def _get_current_amount(self):
         try:
             val = self.entry_amount.get().replace(",", "")
@@ -223,10 +203,17 @@ class AddGuestDialog(ctk.CTkToplevel):
             self.entry_name.focus_set()
             return
 
+        if not self.is_edit_mode:
+            exists = any(g.get('name') == name for g in self.master.guest_list)
+            if exists:
+                if not messagebox.askyesno("중복 이름", f"'{name}'(이)라는 이름이 이미 명단에 있습니다.\n그래도 등록하시겠습니까?"):
+                    return
+
         self.guest_data = {
             "name": name,
             "affiliation": self.entry_affil.get().strip(),
-            "side": self.seg_side.get(),
+            # ★ 변경: 콤보박스에서 값 가져오기
+            "side": self.combo_side.get(),
             "relation": self.combo_rel.get(),
             "amount": self._get_current_amount(),
             "meal": int(self.lbl_ticket.cget("text")),
