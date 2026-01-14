@@ -12,6 +12,17 @@
 
 실제 가족의 결혼식에서 사용하기 위해 **현장의 긴박함과 사용성(UX)**을 최우선으로 고려하여 설계되었습니다.
 
+## 📸 Screenshots
+| 메인 대시보드 & 통계 | 하객 등록 창 |
+| :---: | :---: |
+| <img src="https://github.com/user-attachments/assets/454da7ea-33ca-4de7-ba14-453b5e5f7393" width="500"/> | <img src="https://github.com/user-attachments/assets/5b7a7508-3eab-4b1e-b33e-a23b1671e0c5" height="400"/> |
+| **엑셀 정산 리포트** | **엑셀 정산 리포트** |
+| <img src="https://github.com/user-attachments/assets/dac58d35-58e1-427b-908d-0ea6529d83fe" width="500"/> |<img src="https://github.com/user-attachments/assets/84d00eed-1ae1-44c7-aa5b-ed13a44875e0" width="500"/> |
+
+
+
+
+
 ## ✨ Key Features
 
 ### 1. 직관적인 하객 관리 (CRUD)
