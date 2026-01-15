@@ -2,9 +2,171 @@
     {
         "name": "테스트1",
         "amount": 200000,
-        "side": "아빠",
-        "relation": "친구",
+        "side": "엄마",
+        "relation": "친척",
         "affiliation": "아아",
+        "meal": 3,
+        "note": ""
+    },
+    {
+        "name": "돈봉투",
+        "amount": 800000,
+        "side": "엄마",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 6,
+        "note": ""
+    },
+    {
+        "name": "테스트3",
+        "amount": 400000,
+        "side": "엄마",
+        "relation": "지인",
+        "affiliation": "ㅇㅇ",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "김또출",
+        "amount": 150000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 3,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 300000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 200000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 5,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 200000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 4,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 400000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 3,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 800000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 200000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 400000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 4,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 200000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 900000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 400000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 100000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 100000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 100000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 0,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 100000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
         "meal": 3,
         "note": ""
     },
@@ -15,6 +177,204 @@
         "relation": "-",
         "affiliation": "",
         "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 101230,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 200000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 100000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "나",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 0,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 1,
         "note": ""
     }
 ]

@@ -34,7 +34,6 @@ class WeddingApp(ctk.CTk):
         self.db = DataManager()
         self.guest_list = self.db.load_data()
 
-        # ★ 수정됨: 설정 파일 로드하여 self.config에 저장 (괄호 필수!)
         self.config = self.load_config()
 
         # 통계 데이터를 담을 변수 초기화
@@ -49,21 +48,18 @@ class WeddingApp(ctk.CTk):
         self.refresh_ui()
 
     def load_config(self):
-        """설정 파일 로드 (파일 없으면 기본값 생성 후 저장)"""
+        """설정 파일 로드"""
         default_config = {
             "sides": ["신랑", "신부"],
             "relations": ["친구", "친척", "직장", "가족", "지인", "기타"]
         }
-
         try:
             with open("config.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # 필수 키가 없으면 기본값으로 보완
                 if "sides" not in data: data["sides"] = default_config["sides"]
                 if "relations" not in data: data["relations"] = default_config["relations"]
                 return data
         except (FileNotFoundError, json.JSONDecodeError):
-            # 파일이 없거나 깨졌으면 기본 파일 생성
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(default_config, f, indent=4, ensure_ascii=False)
             return default_config
@@ -211,13 +207,13 @@ class WeddingApp(ctk.CTk):
         mini_cols = ("Group", "Count", "Sum", "Meal")
         self.mini_tree = ttk.Treeview(self.stats_detail_frame, columns=mini_cols, show="headings", height=5)
 
-        self.mini_tree.heading("Group", text="분류");
+        self.mini_tree.heading("Group", text="분류")
         self.mini_tree.column("Group", anchor="center", width=80)
-        self.mini_tree.heading("Count", text="인원");
+        self.mini_tree.heading("Count", text="인원")
         self.mini_tree.column("Count", anchor="center", width=60)
-        self.mini_tree.heading("Sum", text="합계 (원)");
+        self.mini_tree.heading("Sum", text="합계 (원)")
         self.mini_tree.column("Sum", anchor="e", width=100)
-        self.mini_tree.heading("Meal", text="식권");
+        self.mini_tree.heading("Meal", text="식권")
         self.mini_tree.column("Meal", anchor="center", width=60)
 
         self.mini_tree.pack(fill="both", expand=True, padx=15, pady=(0, 15))
@@ -261,18 +257,25 @@ class WeddingApp(ctk.CTk):
 
     def refresh_ui(self, data=None):
         """데이터 갱신 및 UI 업데이트"""
-        target_list = data if data is not None else self.guest_list
+
+        # [변경 핵심 1] data가 None이면 '전체 리스트와 인덱스'를 가져옴
+        if data is None:
+            # enumerate를 사용하여 (실제인덱스, 데이터) 튜플 리스트 생성
+            target_list = list(enumerate(self.guest_list))
+        else:
+            # 검색된 경우, data 자체가 이미 (실제인덱스, 데이터) 형태여야 함
+            target_list = data
 
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        total_count = 0;
-        total_money = 0;
+        total_count = 0
+        total_money = 0
         total_meal = 0
         self.stats_side = {}
         self.stats_relation = {}
 
-        # 통계 집계
+        # 전체 통계 집계 (화면 표시와 무관하게 전체 데이터 기준)
         for guest in self.guest_list:
             amount = guest.get("amount", 0)
             side = guest.get("side", "미지정")
@@ -284,23 +287,20 @@ class WeddingApp(ctk.CTk):
             total_meal += meal
 
             if side not in self.stats_side: self.stats_side[side] = {"count": 0, "money": 0, "meal": 0}
-            self.stats_side[side]["count"] += 1;
-            self.stats_side[side]["money"] += amount;
+            self.stats_side[side]["count"] += 1
+            self.stats_side[side]["money"] += amount
             self.stats_side[side]["meal"] += meal
 
             if relation not in self.stats_relation: self.stats_relation[relation] = {"count": 0, "money": 0, "meal": 0}
-            self.stats_relation[relation]["count"] += 1;
-            self.stats_relation[relation]["money"] += amount;
+            self.stats_relation[relation]["count"] += 1
+            self.stats_relation[relation]["money"] += amount
             self.stats_relation[relation]["meal"] += meal
 
         # 리스트 채우기
-        for i, guest in enumerate(target_list):
-            try:
-                real_index = self.guest_list.index(guest)
-            except ValueError:
-                continue
-
-            # 데이터는 건드리지 않고, '화면 표시용 변수'를 만듭니다.
+        # i: 화면에 표시되는 순서 (0, 1, 2...)
+        # real_index: 실제 데이터베이스 상의 인덱스
+        # guest: 데이터
+        for i, (real_index, guest) in enumerate(target_list):
             raw_name = guest.get("name", "")
             display_name = raw_name if raw_name else "(이름 미기재)"
 
@@ -313,8 +313,11 @@ class WeddingApp(ctk.CTk):
 
             tag = "evenrow" if i % 2 == 0 else "oddrow"
 
-            self.tree.insert("", "end", values=(
-                real_index + 1,
+            # [변경 핵심 2]
+            # iid=str(real_index): Treeview의 숨겨진 ID로 '실제 인덱스'를 사용 (수정/삭제용)
+            # values의 첫 번째 값: i + 1 (화면용 순차 번호 1~N)
+            self.tree.insert("", "end", iid=str(real_index), values=(
+                i + 1,  # 여기가 화면에 보이는 No.
                 display_name,
                 f"{amount:,}",
                 meal,
@@ -354,7 +357,6 @@ class WeddingApp(ctk.CTk):
             ), tags=(tag,))
 
     def open_add_dialog(self):
-        """새 하객 등록 창 열기"""
         current_sides = self.config.get("sides", ["신랑", "신부"])
         current_relations = self.config.get("relations", ["친구", "친척", "직장", "가족", "지인", "기타"])
 
@@ -370,17 +372,16 @@ class WeddingApp(ctk.CTk):
             self.refresh_ui()
 
     def edit_guest(self, event):
-        """하객 정보 수정 (더블 클릭 이벤트)"""
+        """하객 정보 수정"""
         selected_item = self.tree.selection()
         if not selected_item:
             return
 
-        item = self.tree.item(selected_item)
-        values = item['values']
-
+        # [변경 핵심 3] 화면의 No가 아닌, 숨겨진 iid(실제 인덱스)를 가져옴
         try:
-            list_index = int(values[0]) - 1
-            target_data = self.guest_list[list_index]
+            item_id = selected_item[0]  # iid 가져오기
+            real_index = int(item_id)  # 문자열 iid를 정수로 변환
+            target_data = self.guest_list[real_index]
         except (ValueError, IndexError):
             return
 
@@ -394,7 +395,7 @@ class WeddingApp(ctk.CTk):
         self.wait_window(dialog)
 
         if hasattr(dialog, 'result_data') and dialog.result_data:
-            self.guest_list[list_index] = dialog.result_data
+            self.guest_list[real_index] = dialog.result_data
             self.db.save_data(self.guest_list)
             self.refresh_ui()
 
@@ -408,12 +409,10 @@ class WeddingApp(ctk.CTk):
         if not messagebox.askyesno("삭제 확인", f"선택한 {count}명의 하객 정보를 정말 삭제하시겠습니까?\n(이 작업은 되돌릴 수 없습니다.)"):
             return
 
+        # [변경 핵심 4] iid를 사용하여 삭제할 인덱스 식별
         indices_to_delete = set()
-        for item in selected_items:
-            values = self.tree.item(item)['values']
-            if values:
-                real_index = int(values[0]) - 1
-                indices_to_delete.add(real_index)
+        for item_id in selected_items:
+            indices_to_delete.add(int(item_id))
 
         new_guest_list = []
         for i, guest in enumerate(self.guest_list):
@@ -440,32 +439,32 @@ class WeddingApp(ctk.CTk):
             return
 
         try:
-            total_count = 0;
-            total_money = 0;
+            total_count = 0
+            total_money = 0
             total_meal = 0
-            stats_side = {};
-            stats_relation = {};
+            stats_side = {}
+            stats_relation = {}
             export_list_data = []
 
             for i, guest in enumerate(self.guest_list, 1):
-                name = guest.get("name", "");
+                name = guest.get("name", "")
                 amount = guest.get("amount", 0)
-                side = guest.get("side", "미지정");
+                side = guest.get("side", "미지정")
                 relation = guest.get("relation", "미지정")
-                affiliation = guest.get("affiliation", "");
+                affiliation = guest.get("affiliation", "")
                 meal = guest.get("meal", 0)
                 note = guest.get("note", "")
 
-                total_count += 1;
-                total_money += amount;
+                total_count += 1
+                total_money += amount
                 total_meal += meal
                 if side not in stats_side: stats_side[side] = {"count": 0, "money": 0, "meal": 0}
-                stats_side[side]["count"] += 1;
-                stats_side[side]["money"] += amount;
+                stats_side[side]["count"] += 1
+                stats_side[side]["money"] += amount
                 stats_side[side]["meal"] += meal
                 if relation not in stats_relation: stats_relation[relation] = {"count": 0, "money": 0, "meal": 0}
-                stats_relation[relation]["count"] += 1;
-                stats_relation[relation]["money"] += amount;
+                stats_relation[relation]["count"] += 1
+                stats_relation[relation]["money"] += amount
                 stats_relation[relation]["meal"] += meal
 
                 export_list_data.append({
@@ -555,7 +554,6 @@ class WeddingApp(ctk.CTk):
     def open_settings(self):
         dialog = SettingsDialog(self, self.db)
         self.wait_window(dialog)
-
         self.config = self.load_config()
         self.refresh_ui()
 
@@ -570,8 +568,9 @@ class WeddingApp(ctk.CTk):
         key_map = {"이름": "name", "소속": "affiliation", "관계": "relation", "비고": "note"}
         target_key = key_map.get(category, "name")
 
+        # [변경 핵심 5] 검색 시에도 (실제인덱스, 데이터) 형태의 튜플 리스트를 생성하여 전달
         filtered_list = [
-            guest for guest in self.guest_list
+            (i, guest) for i, guest in enumerate(self.guest_list)
             if keyword in str(guest.get(target_key, ""))
         ]
 
