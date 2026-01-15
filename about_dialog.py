@@ -25,7 +25,7 @@ class AboutDialog(ctk.CTkToplevel):
                      font=("Malgun Gothic", 18, "bold"), text_color="#1E88E5").pack(pady=(20, 5))
 
         # 2. 버전 정보
-        ctk.CTkLabel(frame, text="Version 1.0.0",
+        ctk.CTkLabel(frame, text="Version 1.0.1",
                      font=("Roboto", 12), text_color="gray").pack(pady=(0, 20))
 
         # 구분선

@@ -3,6 +3,7 @@ import customtkinter as ctk
 from tkinter import messagebox, filedialog
 import pandas as pd
 from openpyxl.styles import Border, Side, PatternFill, Font, Alignment
+import json
 
 # 사용자 정의 모듈 import
 from data_manager import DataManager
@@ -10,7 +11,6 @@ from add_dialog import AddGuestDialog
 from settings_dialog import SettingsDialog
 from about_dialog import AboutDialog
 
-# --- 초기 설정 ---
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("dark-blue")
 
@@ -21,8 +21,8 @@ class WeddingApp(ctk.CTk):
 
         # 1. 윈도우 설정
         self.title("축의금 정산 매니저 - syann97")
-        self.geometry("1280x800")
-        self.minsize(1100, 700)  # 최소 너비를 조금 늘려서 버튼 짤림 방지
+        self.after(200, lambda: self.state("zoomed"))
+        self.minsize(1100, 700)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -33,21 +33,13 @@ class WeddingApp(ctk.CTk):
         # 2. DB 연결 및 데이터 로드
         self.db = DataManager()
         self.guest_list = self.db.load_data()
-        self.db.load_config()
+
+        # ★ 수정됨: 설정 파일 로드하여 self.config에 저장 (괄호 필수!)
+        self.config = self.load_config()
 
         # 통계 데이터를 담을 변수 초기화
         self.stats_side = {}
         self.stats_relation = {}
-
-        # # 테스트 완료
-        # if not self.guest_list:
-        #     self.guest_list = [
-        #         {"name": "홍길동", "amount": 100000, "side": "신랑", "relation": "친구", "affiliation": "삼성전자", "meal": 1,
-        #          "note": "축하해"},
-        #         {"name": "김철수", "amount": 50000, "side": "신부", "relation": "친척", "affiliation": "이모부", "meal": 2,
-        #          "note": ""}
-        #     ]
-        #     self.db.save_data(self.guest_list)
 
         # UI 배치
         self.create_top_frame()
@@ -56,27 +48,47 @@ class WeddingApp(ctk.CTk):
 
         self.refresh_ui()
 
+    def load_config(self):
+        """설정 파일 로드 (파일 없으면 기본값 생성 후 저장)"""
+        default_config = {
+            "sides": ["신랑", "신부"],
+            "relations": ["친구", "친척", "직장", "가족", "지인", "기타"]
+        }
+
+        try:
+            with open("config.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                # 필수 키가 없으면 기본값으로 보완
+                if "sides" not in data: data["sides"] = default_config["sides"]
+                if "relations" not in data: data["relations"] = default_config["relations"]
+                return data
+        except (FileNotFoundError, json.JSONDecodeError):
+            # 파일이 없거나 깨졌으면 기본 파일 생성
+            with open("config.json", "w", encoding="utf-8") as f:
+                json.dump(default_config, f, indent=4, ensure_ascii=False)
+            return default_config
+
     def create_top_frame(self):
-        """상단 검색 및 액션 버튼 (레이아웃 개선됨)"""
+        """상단 검색 및 액션 버튼"""
         self.top_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="transparent")
         self.top_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
 
         # 1. 왼쪽: 타이틀
-        self.title_label = ctk.CTkLabel(self.top_frame, text="Wedding Manager",  # 공간 절약을 위해 영문 단축
+        self.title_label = ctk.CTkLabel(self.top_frame, text="Wedding Manager",
                                         font=("Roboto Medium", 20), text_color=("gray30", "gray70"))
         self.title_label.pack(side="left", padx=(10, 20))
 
-        # 2. 중앙: 검색 그룹 (Frame으로 묶어서 관리)
+        # 2. 중앙: 검색 그룹
         search_frame = ctk.CTkFrame(self.top_frame, fg_color="transparent")
         search_frame.pack(side="left", padx=5)
 
         self.btn_about = ctk.CTkButton(search_frame, text="ⓘ", width=40, height=35,
                                        fg_color="#78909C", hover_color="#546E7A", font=self.font_bold,
-                                       command=self.open_about)  # 함수 연결
+                                       command=self.open_about)
         self.btn_about.pack(side="left", padx=(0, 5))
 
         self.search_combo = ctk.CTkComboBox(search_frame, values=["이름", "소속", "관계", "비고"],
-                                            width=90, height=35, font=self.font_body)  # 너비 약간 줄임
+                                            width=90, height=35, font=self.font_body)
         self.search_combo.set("이름")
         self.search_combo.pack(side="left", padx=(0, 5))
 
@@ -85,8 +97,7 @@ class WeddingApp(ctk.CTk):
         self.search_entry.pack(side="left", padx=(0, 5))
         self.search_entry.bind('<Return>', self.search_guest)
 
-        # 검색 버튼
-        self.btn_search = ctk.CTkButton(search_frame, text="🔍", width=50, height=35,  # 텍스트 대신 아이콘 느낌으로
+        self.btn_search = ctk.CTkButton(search_frame, text="🔍", width=50, height=35,
                                         fg_color="#546e7a", hover_color="#455a64", font=self.font_bold,
                                         command=self.search_guest)
         self.btn_search.pack(side="left", padx=(0, 5))
@@ -96,29 +107,25 @@ class WeddingApp(ctk.CTk):
                                        command=self.reset_search)
         self.btn_reset.pack(side="left")
 
-        # 3. 오른쪽: 액션 버튼 그룹 (Frame으로 묶어서 오른쪽 정렬 고정)
+        # 3. 오른쪽: 액션 버튼 그룹
         action_frame = ctk.CTkFrame(self.top_frame, fg_color="transparent")
         action_frame.pack(side="right")
 
-        # 설정 (작게)
         self.btn_settings = ctk.CTkButton(action_frame, text="⚙️", width=50, height=35,
                                           fg_color="#607D8B", hover_color="#455a64", font=self.font_bold,
                                           command=self.open_settings)
         self.btn_settings.pack(side="left", padx=5)
 
-        # 엑셀 (중간)
         self.btn_excel = ctk.CTkButton(action_frame, text="📊 엑셀", width=80, height=35,
                                        fg_color="#1E88E5", hover_color="#1565C0", font=self.font_bold,
                                        command=self.export_to_excel)
         self.btn_excel.pack(side="left", padx=5)
 
-        # 추가 (강조)
         self.btn_add = ctk.CTkButton(action_frame, text="+ 추가", width=90, height=35,
                                      fg_color="#2EB086", hover_color="#219F79", font=self.font_bold,
                                      command=self.open_add_dialog)
         self.btn_add.pack(side="left", padx=5)
 
-        # 삭제 (위험 색상)
         self.btn_delete = ctk.CTkButton(action_frame, text="- 삭제", width=90, height=35,
                                         fg_color="#D84315", hover_color="#BF360C", font=self.font_bold,
                                         command=self.delete_guest)
@@ -149,17 +156,17 @@ class WeddingApp(ctk.CTk):
                         font=("Malgun Gothic", 11, "bold"))
         style.map("Treeview", background=[('selected', row_selected)], foreground=[('selected', 'white')])
 
-        columns = ("No", "Name", "Amount", "GuestOf", "Relation", "Affiliation", "Meal", "Note")
+        columns = ("No", "Name", "Amount", "Meal", "GuestOf", "Relation", "Affiliation", "Note")
         self.tree = ttk.Treeview(self.list_frame, columns=columns, show="headings", style="Treeview")
 
         headers = [
             ("No", "No", "center", 50),
             ("Name", "이름", "center", 100),
             ("Amount", "금액 (원)", "e", 120),
+            ("Meal", "식권", "center", 60),
             ("GuestOf", "대상", "center", 80),
             ("Relation", "관계", "center", 80),
             ("Affiliation", "소속", "w", 150),
-            ("Meal", "식권", "center", 60),
             ("Note", "비고", "w", 250)
         ]
 
@@ -265,6 +272,7 @@ class WeddingApp(ctk.CTk):
         self.stats_side = {}
         self.stats_relation = {}
 
+        # 통계 집계
         for guest in self.guest_list:
             amount = guest.get("amount", 0)
             side = guest.get("side", "미지정")
@@ -285,13 +293,17 @@ class WeddingApp(ctk.CTk):
             self.stats_relation[relation]["money"] += amount;
             self.stats_relation[relation]["meal"] += meal
 
+        # 리스트 채우기
         for i, guest in enumerate(target_list):
             try:
                 real_index = self.guest_list.index(guest)
             except ValueError:
                 continue
 
-            name = guest.get("name", "")
+            # 데이터는 건드리지 않고, '화면 표시용 변수'를 만듭니다.
+            raw_name = guest.get("name", "")
+            display_name = raw_name if raw_name else "(이름 미기재)"
+
             amount = guest.get("amount", 0)
             side = guest.get("side", "")
             relation = guest.get("relation", "")
@@ -300,8 +312,16 @@ class WeddingApp(ctk.CTk):
             note = guest.get("note", "")
 
             tag = "evenrow" if i % 2 == 0 else "oddrow"
+
             self.tree.insert("", "end", values=(
-                real_index + 1, name, f"{amount:,}", side, relation, affiliation, meal, note
+                real_index + 1,
+                display_name,
+                f"{amount:,}",
+                meal,
+                side,
+                relation,
+                affiliation,
+                note
             ), tags=(tag,))
 
         self.lbl_total_people.configure(text=f"{total_count} 명")
@@ -334,29 +354,47 @@ class WeddingApp(ctk.CTk):
             ), tags=(tag,))
 
     def open_add_dialog(self):
-        dialog = AddGuestDialog(self, self.db)
+        """새 하객 등록 창 열기"""
+        current_sides = self.config.get("sides", ["신랑", "신부"])
+        current_relations = self.config.get("relations", ["친구", "친척", "직장", "가족", "지인", "기타"])
+
+        dialog = AddGuestDialog(self,
+                                side_list=current_sides,
+                                relation_list=current_relations,
+                                guest_data=None)
         self.wait_window(dialog)
-        if dialog.guest_data:
-            self.guest_list.append(dialog.guest_data)
+
+        if hasattr(dialog, 'result_data') and dialog.result_data:
+            self.guest_list.append(dialog.result_data)
             self.db.save_data(self.guest_list)
             self.refresh_ui()
 
     def edit_guest(self, event):
+        """하객 정보 수정 (더블 클릭 이벤트)"""
         selected_item = self.tree.selection()
-        if not selected_item: return
+        if not selected_item:
+            return
 
-        values = self.tree.item(selected_item)['values']
-        if not values: return
+        item = self.tree.item(selected_item)
+        values = item['values']
 
-        list_index = int(values[0]) - 1
-        if list_index < 0 or list_index >= len(self.guest_list): return
+        try:
+            list_index = int(values[0]) - 1
+            target_data = self.guest_list[list_index]
+        except (ValueError, IndexError):
+            return
 
-        target_data = self.guest_list[list_index]
-        dialog = AddGuestDialog(self, self.db, initial_data=target_data)
+        current_sides = self.config.get("sides", ["신랑", "신부"])
+        current_relations = self.config.get("relations", ["친구", "친척", "직장", "가족", "지인", "기타"])
+
+        dialog = AddGuestDialog(self,
+                                side_list=current_sides,
+                                relation_list=current_relations,
+                                guest_data=target_data)
         self.wait_window(dialog)
 
-        if dialog.guest_data:
-            self.guest_list[list_index] = dialog.guest_data
+        if hasattr(dialog, 'result_data') and dialog.result_data:
+            self.guest_list[list_index] = dialog.result_data
             self.db.save_data(self.guest_list)
             self.refresh_ui()
 
@@ -517,6 +555,8 @@ class WeddingApp(ctk.CTk):
     def open_settings(self):
         dialog = SettingsDialog(self, self.db)
         self.wait_window(dialog)
+
+        self.config = self.load_config()
         self.refresh_ui()
 
     def search_guest(self, event=None):

@@ -1,222 +1,209 @@
 import customtkinter as ctk
-from tkinter import messagebox
 
 
 class AddGuestDialog(ctk.CTkToplevel):
-    def __init__(self, parent, data_manager, initial_data=None):
+    def __init__(self, parent, side_list, relation_list, guest_data=None):
         super().__init__(parent)
 
-        self.db = data_manager
-        self.config = self.db.load_config()
+        self.guest_data = guest_data
 
-        self.is_edit_mode = initial_data is not None
-        self.initial_data = initial_data
+        self.side_list = side_list
+        self.relation_list = relation_list
 
-        title_text = "하객 정보 수정" if self.is_edit_mode else "새 하객 등록"
-        self.title(title_text)
+        title = "하객 수정" if guest_data else "새 하객 등록"
+        self.title(title)
 
-        self.geometry("520x680")
+        # 창 크기 설정
+        window_width = 520
+        window_height = 680
+        self.geometry(f"{window_width}x{window_height}")
         self.resizable(False, False)
+
         self.transient(parent)
         self.grab_set()
-        self.focus_force()
-
-        self.guest_data = None
-
-        self.font_header = ("Malgun Gothic", 16, "bold")
-        self.font_label = ("Malgun Gothic", 13)
-        self.font_input = ("Malgun Gothic", 13)
 
         self._init_ui()
+        self._center_window(parent, window_width, window_height)
 
-        if self.is_edit_mode:
-            self._populate_data()
-            self.btn_save.configure(text="수정 완료", fg_color="#1E88E5", hover_color="#1976D2")
-
-        self._center_window(parent)
-
-    def _init_ui(self):
-        main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        main_frame.pack(fill="both", expand=True, padx=25, pady=25)
-
-        # [섹션 1] 인적 사항
-        info_frame = ctk.CTkFrame(main_frame, corner_radius=10)
-        info_frame.pack(fill="x", pady=(0, 20))
-
-        ctk.CTkLabel(info_frame, text="👤 인적 사항", font=self.font_header).pack(anchor="w", padx=20, pady=(20, 15))
-
-        row1 = ctk.CTkFrame(info_frame, fg_color="transparent")
-        row1.pack(fill="x", padx=20, pady=(0, 15))
-
-        ctk.CTkLabel(row1, text="이름 *", font=self.font_label).pack(side="left", padx=(0, 10))
-        self.entry_name = ctk.CTkEntry(row1, width=130, font=self.font_input, placeholder_text="예: 홍길동")
-        self.entry_name.pack(side="left")
-
-        ctk.CTkLabel(row1, text="소속", font=self.font_label).pack(side="left", padx=(20, 10))
-        self.entry_affil = ctk.CTkEntry(row1, width=150, font=self.font_input, placeholder_text="예: 삼성전자")
-        self.entry_affil.pack(side="left", fill="x", expand=True)
-
-        row2 = ctk.CTkFrame(info_frame, fg_color="transparent")
-        row2.pack(fill="x", padx=20, pady=(0, 20))
-
-        ctk.CTkLabel(row2, text="구분", font=self.font_label).pack(side="left", padx=(0, 10))
-
-        sides = self.config.get("sides", ["신랑", "신부"])
-        self.combo_side = ctk.CTkComboBox(row2, values=sides, width=130, font=self.font_input)
-        self.combo_side.set(sides[0] if sides else "신랑")
-        self.combo_side.pack(side="left")
-
-
-        ctk.CTkLabel(row2, text="관계", font=self.font_label).pack(side="left", padx=(20, 10))
-
-        relations = self.config.get("relations", ["친구", "친척"])
-        self.combo_rel = ctk.CTkComboBox(row2, values=relations, width=120, font=self.font_input)
-        self.combo_rel.set(relations[0] if relations else "친구")
-        self.combo_rel.pack(side="left", fill="x", expand=True)
-
-        # [섹션 2] 축의금 및 식권
-        money_frame = ctk.CTkFrame(main_frame, corner_radius=10, fg_color=("#E3F2FD", "#1e2a36"))
-        money_frame.pack(fill="x", pady=(0, 20))
-
-        ctk.CTkLabel(money_frame, text="💰 축의금 및 식권", font=self.font_header, text_color=("#1565C0", "#64B5F6")).pack(
-            anchor="w", padx=20, pady=(20, 10))
-
-        money_row = ctk.CTkFrame(money_frame, fg_color="transparent")
-        money_row.pack(fill="x", padx=20, pady=(0, 10))
-
-        ctk.CTkLabel(money_row, text="금액", font=self.font_label).pack(side="left", padx=(0, 10))
-        self.entry_amount = ctk.CTkEntry(money_row, font=("Roboto", 20, "bold"), justify="right", width=180, height=35)
-        self.entry_amount.insert(0, "0")
-        self.entry_amount.pack(side="left")
-        ctk.CTkLabel(money_row, text="원", font=self.font_label).pack(side="left", padx=(10, 0))
-
-        btn_row = ctk.CTkFrame(money_frame, fg_color="transparent")
-        btn_row.pack(fill="x", padx=20, pady=(5, 15))
-
-        def make_add_btn(amt, label):
-            return ctk.CTkButton(btn_row, text=label, width=60, height=30,
-                                 fg_color="#90A4AE", hover_color="#607D8B",
-                                 command=lambda: self._add_money(amt))
-
-        make_add_btn(10000, "+1만").pack(side="left", padx=(0, 5))
-        make_add_btn(50000, "+5만").pack(side="left", padx=5)
-        make_add_btn(100000, "+10만").pack(side="left", padx=5)
-
-        ctk.CTkButton(btn_row, text="C", width=40, height=30, fg_color="#EF5350", hover_color="#C62828",
-                      command=lambda: self._set_money(0)).pack(side="right")
-
-        meal_row = ctk.CTkFrame(money_frame, fg_color="transparent")
-        meal_row.pack(fill="x", padx=20, pady=(5, 20))
-
-        ctk.CTkLabel(meal_row, text="식권", font=self.font_label).pack(side="left", padx=(0, 10))
-
-        counter_box = ctk.CTkFrame(meal_row, fg_color="transparent")
-        counter_box.pack(side="left")
-
-        ctk.CTkButton(counter_box, text="-", width=35, height=35, fg_color="#B0BEC5", text_color="black",
-                      command=lambda: self._change_ticket(-1)).pack(side="left")
-
-        self.lbl_ticket = ctk.CTkLabel(counter_box, text="1", font=("Roboto", 20, "bold"), width=50)
-        self.lbl_ticket.pack(side="left", padx=5)
-
-        ctk.CTkButton(counter_box, text="+", width=35, height=35, fg_color="#B0BEC5", text_color="black",
-                      command=lambda: self._change_ticket(1)).pack(side="left")
-
-        # [섹션 3] 비고
-        note_frame = ctk.CTkFrame(main_frame, corner_radius=10)
-        note_frame.pack(fill="both", expand=True)
-
-        ctk.CTkLabel(note_frame, text="📝 비고 (메모)", font=self.font_label).pack(anchor="w", padx=20, pady=(15, 5))
-        self.entry_note = ctk.CTkTextbox(note_frame, height=70, font=self.font_input)
-        self.entry_note.pack(fill="x", padx=20, pady=(0, 20))
-
-        # 버튼
-        action_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
-        action_frame.pack(fill="x", pady=(10, 0))
-
-        self.btn_cancel = ctk.CTkButton(action_frame, text="취소", height=45,
-                                        fg_color="#cfd8dc", text_color="black", hover_color="#b0bec5",
-                                        font=self.font_header,
-                                        command=self.destroy)
-        self.btn_cancel.pack(side="left", fill="x", expand=True, padx=(0, 10))
-
-        self.btn_save = ctk.CTkButton(action_frame, text="저장 하기", height=45,
-                                      fg_color="#2EB086", hover_color="#219F79", font=self.font_header,
-                                      command=self.save_guest)
-        self.btn_save.pack(side="right", fill="x", expand=True, padx=(10, 0))
-
-        self.bind('<Return>', lambda e: self.save_guest())
-
-    def _populate_data(self):
-        data = self.initial_data
-
-        self.entry_name.delete(0, "end")
-        self.entry_name.insert(0, data.get('name', ''))
-
-        self.entry_affil.delete(0, "end")
-        self.entry_affil.insert(0, data.get('affiliation', ''))
-
-        side = data.get('side', '신랑')
-        self.combo_side.set(side)
-
-        rel = data.get('relation', '친구')
-        self.combo_rel.set(rel)
-
-        amount = data.get('amount', 0)
-        self._set_money(amount)
-
-        self.lbl_ticket.configure(text=str(data.get('meal', 1)))
-
-        self.entry_note.delete("1.0", "end")
-        self.entry_note.insert("1.0", data.get('note', ''))
-
-    def _get_current_amount(self):
-        try:
-            val = self.entry_amount.get().replace(",", "")
-            return int(val) if val else 0
-        except ValueError:
-            return 0
-
-    def _add_money(self, amount):
-        current = self._get_current_amount()
-        self._set_money(current + amount)
-
-    def _set_money(self, value):
-        self.entry_amount.delete(0, "end")
-        self.entry_amount.insert(0, f"{value:,}")
-
-    def _change_ticket(self, delta):
-        current = int(self.lbl_ticket.cget("text"))
-        new_val = max(0, current + delta)
-        self.lbl_ticket.configure(text=str(new_val))
-
-    def _center_window(self, parent):
+    def _center_window(self, parent, width, height):
         parent.update_idletasks()
-        x = parent.winfo_x() + (parent.winfo_width() // 2) - (520 // 2)
-        y = parent.winfo_y() + (parent.winfo_height() // 2) - (680 // 2)
+        parent_x = parent.winfo_x()
+        parent_y = parent.winfo_y()
+        parent_width = parent.winfo_width()
+        parent_height = parent.winfo_height()
+
+        x = parent_x + (parent_width // 2) - (width // 2)
+        y = parent_y + (parent_height // 2) - (height // 2)
+
+        if x < 0: x = 0
+        if y < 0: y = 0
         self.geometry(f"+{x}+{y}")
 
-    def save_guest(self):
+    def _init_ui(self):
+        self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        # --- 1. 인적 사항 ---
+        ctk.CTkLabel(self.main_frame, text="👤 인적 사항", font=("Malgun Gothic", 14, "bold"), anchor="w").pack(fill="x",
+                                                                                                            pady=(
+                                                                                                            0, 10))
+
+        input_frame = ctk.CTkFrame(self.main_frame, fg_color="#f0f0f0")
+        input_frame.pack(fill="x", pady=(0, 20))
+
+        # 이름 & 소속
+        row1 = ctk.CTkFrame(input_frame, fg_color="transparent")
+        row1.pack(fill="x", padx=10, pady=10)
+
+        ctk.CTkLabel(row1, text="이름", width=60, anchor="w").pack(side="left")
+        self.entry_name = ctk.CTkEntry(row1, placeholder_text="미기재 시 자동입력", width=100)
+        self.entry_name.pack(side="left", padx=5, expand=True, fill="x")
+
+        ctk.CTkLabel(row1, text="소속", width=40, anchor="w").pack(side="left", padx=(10, 0))
+        self.entry_affil = ctk.CTkEntry(row1, placeholder_text="삼성전자", width=100)
+        self.entry_affil.pack(side="left", padx=5, expand=True, fill="x")
+
+        # 구분 & 관계
+        row2 = ctk.CTkFrame(input_frame, fg_color="transparent")
+        row2.pack(fill="x", padx=10, pady=(0, 10))
+
+        ctk.CTkLabel(row2, text="구분", width=60, anchor="w").pack(side="left")
+
+        self.combo_side = ctk.CTkComboBox(row2, values=self.side_list, width=90, state="readonly")
+        if self.side_list:
+            self.combo_side.set(self.side_list[0])  # 첫 번째 항목 기본 선택
+        self.combo_side.pack(side="left", padx=5)
+
+        ctk.CTkLabel(row2, text="관계", width=40, anchor="w").pack(side="left", padx=(20, 0))
+
+        self.combo_relation = ctk.CTkComboBox(row2, values=self.relation_list, width=90)
+        if self.relation_list:
+            self.combo_relation.set(self.relation_list[0])  # 첫 번째 항목 기본 선택
+        self.combo_relation.pack(side="left", padx=5)
+
+        # --- 2. 축의금 및 식권 ---
+        ctk.CTkLabel(self.main_frame, text="💰 축의금 및 식권", font=("Malgun Gothic", 14, "bold"), anchor="w").pack(fill="x",
+                                                                                                               pady=(
+                                                                                                               0, 10))
+
+        money_frame = ctk.CTkFrame(self.main_frame, fg_color="#E3F2FD")
+        money_frame.pack(fill="x", pady=(0, 20))
+
+        # 금액 입력
+        m_row1 = ctk.CTkFrame(money_frame, fg_color="transparent")
+        m_row1.pack(fill="x", padx=10, pady=10)
+
+        ctk.CTkLabel(m_row1, text="금액", width=40, anchor="w", font=("Malgun Gothic", 14, "bold")).pack(side="left")
+
+        self.entry_amount = ctk.CTkEntry(m_row1, placeholder_text="0",
+                                         font=("Arial", 22, "bold"),
+                                         justify="right",
+                                         width=160, height=45)
+        self.entry_amount.pack(side="left", padx=5)
+        ctk.CTkLabel(m_row1, text="원", width=20, font=("Malgun Gothic", 16, "bold")).pack(side="left")
+
+        # 금액 퀵 버튼
+        m_row2 = ctk.CTkFrame(money_frame, fg_color="transparent")
+        m_row2.pack(fill="x", padx=10, pady=(0, 10))
+
+        btn_opts = {"width": 80, "height": 40, "fg_color": "#90A4AE", "font": ("Malgun Gothic", 12, "bold")}
+        ctk.CTkButton(m_row2, text="+1만", command=lambda: self.add_money(10000), **btn_opts).pack(side="left", padx=5)
+        ctk.CTkButton(m_row2, text="+5만", command=lambda: self.add_money(50000), **btn_opts).pack(side="left", padx=5)
+        ctk.CTkButton(m_row2, text="+10만", command=lambda: self.add_money(100000), **btn_opts).pack(side="left", padx=5)
+
+        ctk.CTkButton(m_row2, text="C", command=lambda: self.entry_amount.delete(0, "end"),
+                      width=40, height=40, fg_color="#EF5350", hover_color="#E53935",
+                      font=("Arial", 12, "bold")).pack(side="right", padx=5)
+
+        # 식권 수량
+        m_row3 = ctk.CTkFrame(money_frame, fg_color="transparent")
+        m_row3.pack(fill="x", padx=10, pady=(0, 10))
+
+        ctk.CTkLabel(m_row3, text="식권", width=40, anchor="w", font=("Malgun Gothic", 14, "bold")).pack(side="left")
+
+        self.meal_var = ctk.IntVar(value=1)
+        btn_minus = ctk.CTkButton(m_row3, text="-", width=45, height=45, fg_color="#B0BEC5",
+                                  font=("Arial", 20, "bold"),
+                                  command=lambda: self.meal_var.set(max(0, self.meal_var.get() - 1)))
+        btn_minus.pack(side="left", padx=10)
+
+        self.lbl_meal = ctk.CTkLabel(m_row3, textvariable=self.meal_var, width=60, font=("Arial", 24, "bold"))
+        self.lbl_meal.pack(side="left", padx=10)
+
+        btn_plus = ctk.CTkButton(m_row3, text="+", width=45, height=45, fg_color="#B0BEC5",
+                                 font=("Arial", 20, "bold"),
+                                 command=lambda: self.meal_var.set(self.meal_var.get() + 1))
+        btn_plus.pack(side="left", padx=10)
+
+        # --- 3. 비고 ---
+        ctk.CTkLabel(self.main_frame, text="📝 비고 (메모)", font=("Malgun Gothic", 12), anchor="w",
+                     text_color="gray").pack(fill="x", pady=(0, 5))
+        self.entry_note = ctk.CTkTextbox(self.main_frame, height=80)
+        self.entry_note.pack(fill="x", pady=(0, 20))
+
+        # --- 하단 버튼 ---
+        btn_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        btn_frame.pack(fill="x", side="bottom")
+
+        ctk.CTkButton(btn_frame, text="취소", fg_color="gray", hover_color="#666",
+                      font=("Malgun Gothic", 14, "bold"),
+                      width=100, height=55, command=self.destroy).pack(side="left", expand=True, padx=10)
+
+        ctk.CTkButton(btn_frame, text="저장 하기", fg_color="#2E7D32", hover_color="#1B5E20",
+                      font=("Malgun Gothic", 14, "bold"),
+                      width=100, height=55, command=self.save_data).pack(side="left", expand=True, padx=10)
+
+        # 데이터 채우기 (수정 모드)
+        if self.guest_data:
+            self.entry_name.insert(0, self.guest_data.get("name", ""))
+            self.entry_affil.insert(0, self.guest_data.get("affiliation", ""))
+
+            # 저장된 값이 콤보박스 목록에 없으면(삭제된 경우) 기본값 사용
+            saved_side = self.guest_data.get("side", "")
+            if saved_side in self.side_list:
+                self.combo_side.set(saved_side)
+
+            saved_relation = self.guest_data.get("relation", "")
+            if saved_relation in self.relation_list:
+                self.combo_relation.set(saved_relation)
+
+            amt = self.guest_data.get("amount", 0)
+            if amt > 0: self.entry_amount.insert(0, str(amt))
+            self.meal_var.set(self.guest_data.get("meal", 1))
+            self.entry_note.insert("1.0", self.guest_data.get("note", ""))
+
+    def add_money(self, amount):
+        try:
+            current = self.entry_amount.get().replace(",", "")
+            current = int(current) if current else 0
+            self.entry_amount.delete(0, "end")
+            self.entry_amount.insert(0, str(current + amount))
+        except ValueError:
+            pass
+
+    def save_data(self):
         name = self.entry_name.get().strip()
-        if not name:
-            messagebox.showwarning("입력 오류", "이름은 필수 입력 항목입니다.")
-            self.entry_name.focus_set()
-            return
+        side = self.combo_side.get()
+        relation = self.combo_relation.get()
+        affiliation = self.entry_affil.get().strip()
+        note = self.entry_note.get("1.0", "end-1c").strip()
 
-        if not self.is_edit_mode:
-            exists = any(g.get('name') == name for g in self.master.guest_list)
-            if exists:
-                if not messagebox.askyesno("중복 이름", f"'{name}'(이)라는 이름이 이미 명단에 있습니다.\n그래도 등록하시겠습니까?"):
-                    return
+        raw_amount = self.entry_amount.get().replace(",", "")
+        try:
+            amount = int(raw_amount) if raw_amount else 0
+        except ValueError:
+            amount = 0
+        meal = self.meal_var.get()
 
-        self.guest_data = {
+        # result
+        result = {
             "name": name,
-            "affiliation": self.entry_affil.get().strip(),
-            # ★ 변경: 콤보박스에서 값 가져오기
-            "side": self.combo_side.get(),
-            "relation": self.combo_rel.get(),
-            "amount": self._get_current_amount(),
-            "meal": int(self.lbl_ticket.cget("text")),
-            "note": self.entry_note.get("1.0", "end").strip()
+            "amount": amount,
+            "side": side,
+            "relation": relation,
+            "affiliation": affiliation,
+            "meal": meal,
+            "note": note
         }
+        self.result_data = result
         self.destroy()

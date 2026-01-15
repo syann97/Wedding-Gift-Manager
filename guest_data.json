@@ -1,1 +1,20 @@
-[]
+[
+    {
+        "name": "테스트1",
+        "amount": 200000,
+        "side": "아빠",
+        "relation": "친구",
+        "affiliation": "아아",
+        "meal": 3,
+        "note": ""
+    },
+    {
+        "name": "",
+        "amount": 400000,
+        "side": "-",
+        "relation": "-",
+        "affiliation": "",
+        "meal": 2,
+        "note": ""
+    }
+]
