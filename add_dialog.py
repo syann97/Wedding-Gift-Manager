@@ -17,7 +17,9 @@ class AddGuestDialog(ctk.CTkToplevel):
         self.title(title_text)
 
         # [UI] 창 크기 및 설정 (1번 스타일)
-        self.geometry("520x680")
+        window_width = 520
+        window_height = 680
+        self.geometry(f"{window_width}x{window_height}")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -34,7 +36,7 @@ class AddGuestDialog(ctk.CTkToplevel):
             self._populate_data()
             self.btn_save.configure(text="수정 완료", fg_color="#1E88E5", hover_color="#1976D2")
 
-        self._center_window(parent)
+        self._center_window(parent, window_width, window_height)
         self.focus_force()
 
     def _init_ui(self):
@@ -195,13 +197,28 @@ class AddGuestDialog(ctk.CTkToplevel):
         self.entry_amount.delete(0, "end")
         self.entry_amount.insert(0, f"{value:,}")
 
-    def _center_window(self, parent):
-        parent.update_idletasks()
-        x = parent.winfo_x() + (parent.winfo_width() // 2) - (520 // 2)
-        y = parent.winfo_y() + (parent.winfo_height() // 2) - (680 // 2)
+    def _center_window(self, parent, width, height):
+        """창을 모니터 화면의 정중앙에 배치"""
+        self.update_idletasks()  # 현재 창의 크기 정보를 최신화
+
+        # 1. 사용자의 모니터 해상도 가져오기
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        # 2. 정중앙 좌표 계산 (화면크기/2 - 창크기/2)
+        x = int((screen_width / 2) - (width / 2))
+        y = int((screen_height / 2) - (height / 2))
+
+        # 3. Y축 보정 (너무 정중앙이면 시각적으로 처져 보일 수 있어 살짝만 위로 올림)
+        # 원하시면 '- 50' 부분을 지우셔도 됩니다.
+        y = y - 50
+
+        # 4. 화면 밖으로 나가는 것 방지 (안전장치)
         if x < 0: x = 0
         if y < 0: y = 0
-        self.geometry(f"+{x}+{y}")
+
+        # 5. 위치 적용
+        self.geometry(f"{width}x{height}+{x}+{y}")
 
     def save_data(self):
         name = self.entry_name.get().strip()
