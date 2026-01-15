@@ -370,11 +370,11 @@
     },
     {
         "name": "",
-        "amount": 0,
+        "amount": 100000,
         "side": "-",
         "relation": "-",
         "affiliation": "",
-        "meal": 1,
+        "meal": 2,
         "note": ""
     }
 ]
